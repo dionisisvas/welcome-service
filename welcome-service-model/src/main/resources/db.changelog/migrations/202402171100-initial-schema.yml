@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20240217-initial-schema
+      author: dionisisvas@gmail.com
+      changes:
+        - createTable:
+            tableName: welcome_calls
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: policy_reference
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: telephone
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(254)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: policy_issued_at
+                  type: timestamp
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: timestamp
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: agent_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: current_timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+        - addUniqueConstraint:
+            constraintName: unique_policy_reference
+            tableName: welcome_calls
+            columnNames: policy_reference

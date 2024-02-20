@@ -1,0 +1,7 @@
+# Test Profile related configuration
+logging:
+  file:
+    path: './logs/${spring.application.name}'
+    name: ${logging.file.path}/welcome-call-service.log.%d{yyyy-MM-dd_HH}
+  level:
+    root: debug
