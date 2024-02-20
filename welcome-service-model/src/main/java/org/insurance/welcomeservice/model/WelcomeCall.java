@@ -66,9 +66,9 @@ public final class WelcomeCall {
     return Objects.equals(id, that.id) && Objects.equals(policyReference,
         that.policyReference) && Objects.equals(telephone, that.telephone)
         && Objects.equals(email, that.email) && Objects.equals(policyIssuedAt,
-        that.policyIssuedAt) && status == that.status && agentId == that.agentId
-        && Objects.equals(createdAt, that.createdAt) && Objects.equals(updatedAt,
-        that.updatedAt);
+        that.policyIssuedAt) && status == that.status && Objects.equals(agentId,
+        that.agentId) && Objects.equals(createdAt, that.createdAt)
+        && Objects.equals(updatedAt, that.updatedAt);
   }
 
   @Override

@@ -15,10 +15,13 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import org.insurance.welcomeservice.exception.NotFoundException;
+import org.insurance.welcomeservice.exception.WelcomeCallProcessedException;
 import org.insurance.welcomeservice.model.WelcomeCall;
 import org.insurance.welcomeservice.repository.WelcomeCallRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -112,14 +115,17 @@ class WelcomeCallServiceTest {
     assertEquals(actual.get(2), givenNewest);
   }
 
-  @Test
-  void shouldUpdateWelcomeCall() {
+  @ParameterizedTest
+  @CsvSource(value = {"null,new_agentId",
+      "new_agentId,new_agentId"
+  }, nullValues = "null")
+  void shouldUpdateWelcomeCall(String existingAgentId, String newAgentId) {
     // Given
     var existing = buildWelcomeCall();
-    var forUpdate = buildWelcomeCall(null, existing.getPolicyReference(), NO_ANSWER, existing.getAgentId());
+    existing.setAgentId(existingAgentId);
+    var forUpdate = buildWelcomeCall(null, existing.getPolicyReference(), NO_ANSWER, newAgentId);
     forUpdate.setStatus(NO_ANSWER);
-    var expected = buildWelcomeCall();
-    expected.setStatus(NO_ANSWER);
+    var expected = buildWelcomeCall(existing.getId(), existing.getPolicyReference(), forUpdate.getStatus(), forUpdate.getAgentId());
     when(welcomeCallRepository.findByPolicyReference(forUpdate.getPolicyReference()))
         .thenReturn(Optional.of(existing));
     when(welcomeCallRepository.save(any())).thenReturn(existing);
@@ -146,4 +152,17 @@ class WelcomeCallServiceTest {
         welcomeCallService.updateWelcomeCall(given));
   }
 
+  @Test
+  void shouldThrowBeingProcessedByAnotherAgentWhenUpdate_ifExistingAgentIdIsNotNull() {
+    // Given
+    var existing = buildWelcomeCall();
+    var forUpdate = buildWelcomeCall(null, existing.getPolicyReference(), NO_ANSWER, "new_agentId");
+    when(welcomeCallRepository.findByPolicyReference(forUpdate.getPolicyReference()))
+        .thenReturn(Optional.of(existing));
+
+    // When
+    // Then
+    assertThrows(WelcomeCallProcessedException.class, () ->
+        welcomeCallService.updateWelcomeCall(forUpdate));
+  }
 }

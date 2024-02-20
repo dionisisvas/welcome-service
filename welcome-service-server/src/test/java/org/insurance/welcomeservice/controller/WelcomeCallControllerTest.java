@@ -15,9 +15,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import org.insurance.welcomeservice.api.model.ApiWelcomeCallStatus;
+import org.insurance.welcomeservice.exception.NotFoundException;
+import org.insurance.welcomeservice.exception.WelcomeCallProcessedException;
 import org.insurance.welcomeservice.mappers.WelcomeCallApiMapper;
-import org.insurance.welcomeservice.model.WelcomeCallStatus;
 import org.insurance.welcomeservice.service.WelcomeCallService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -82,7 +83,7 @@ class WelcomeCallControllerTest {
     String response = mockMvc
         .perform(patch(BASE_URL+"/welcomecall")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(expectedResponse))
+            .content(objectMapper.writeValueAsString(givenRequest)))
         .andExpect(status().isOk())
         .andDo(print())
         .andReturn()
@@ -114,5 +115,43 @@ class WelcomeCallControllerTest {
     // Then
     verify(welcomeCallService).getNotAnsweredWelcomeCalls();
     assertEquals(response, expectedResponse);
+  }
+
+  @Test
+  void shouldReturnNotFound_ifWelcomeCallIsNotFound() throws Exception {
+    // Given
+    var givenRequest = buildWelcomeCallRequest();
+    var givenWelcomeCall = mapper.toWelcomeCallModel(givenRequest);
+    when(welcomeCallService.updateWelcomeCall(givenWelcomeCall))
+        .thenThrow(NotFoundException.class);
+
+    // When
+    // Then
+    mockMvc.perform(patch(BASE_URL+"/welcomecall")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(givenRequest)))
+        .andExpect(status().isNotFound())
+        .andDo(print())
+        .andReturn()
+        .getResponse().getContentAsString();
+  }
+
+  @Test
+  void shouldReturnLocked_ifWelcomeCallIsLocked() throws Exception {
+    // Given
+    var givenRequest = buildWelcomeCallRequest();
+    var givenWelcomeCall = mapper.toWelcomeCallModel(givenRequest);
+    when(welcomeCallService.updateWelcomeCall(givenWelcomeCall))
+        .thenThrow(WelcomeCallProcessedException.class);
+
+    // When
+    // Then
+    mockMvc.perform(patch(BASE_URL+"/welcomecall")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(givenRequest)))
+        .andExpect(status().isLocked())
+        .andDo(print())
+        .andReturn()
+        .getResponse().getContentAsString();
   }
 }

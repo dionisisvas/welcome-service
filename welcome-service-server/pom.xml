@@ -17,7 +17,6 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql-jdbc.version>42.7.1</postgresql-jdbc.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
         <spring-doc.openapi.version>2.3.0</spring-doc.openapi.version>
     </properties>
 

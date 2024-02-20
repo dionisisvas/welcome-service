@@ -1,10 +1,15 @@
 package org.insurance.welcomeservice.service;
 
+import static java.util.Objects.isNull;
+
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.insurance.welcomeservice.exception.NotFoundException;
+import org.insurance.welcomeservice.exception.WelcomeCallProcessedException;
 import org.insurance.welcomeservice.model.WelcomeCall;
 import org.insurance.welcomeservice.model.WelcomeCallStatus;
 import org.insurance.welcomeservice.repository.WelcomeCallRepository;
@@ -14,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implementation class for WelcomeCallService.
  */
+@Slf4j
 @Service
 public class WelcomeCallServiceImpl implements WelcomeCallService {
 
@@ -33,13 +39,15 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
   @Override
   @Transactional
   public List<WelcomeCall> getPendingWelcomeCalls() {
-    return welcomeCallRepository.findByStatus(WelcomeCallStatus.PENDING).stream()
+     List<WelcomeCall> welcomeCalls = welcomeCallRepository.findByStatus(WelcomeCallStatus.PENDING).stream()
         .sorted(Comparator.comparing(WelcomeCall::getPolicyIssuedAt))
         .toList();
+     log.info("Fetched all pending welcome calls: {}", welcomeCalls);
+     return welcomeCalls;
   }
 
   /**
-   * Updates fields of an existing welcome call entry.
+   * Updates fields of an existing welcome call entry (status and agentId fields).
    *
    * @param welcomeCall the Welcome Call entry to update.
    * @return  the updated entry.
@@ -49,7 +57,9 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
   public WelcomeCall updateWelcomeCall(WelcomeCall welcomeCall) {
     WelcomeCall existingWelcomeCall = welcomeCallRepository.findByPolicyReference(welcomeCall.getPolicyReference())
         .orElseThrow(NotFoundException::ofWelcomeCallNotFound);
+    verifyWelcomeCallProcessingStatus(existingWelcomeCall, welcomeCall.getAgentId());
     WelcomeCall welcomeCallForUpdate = prepareForUpdate(welcomeCall, existingWelcomeCall);
+    log.info("Updating welcome call entry: {}", welcomeCallForUpdate);
     return welcomeCallRepository.save(welcomeCallForUpdate);
   }
 
@@ -64,10 +74,10 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
   public List<WelcomeCall> getNotAnsweredWelcomeCalls() {
     List<WelcomeCall> welcomeCalls =
         welcomeCallRepository.findByStatusAndPolicyIssuedAtAfter(WelcomeCallStatus.NO_ANSWER, getDelayedDate());
+    log.info("Fetched all not answered welcome calls within the last two days: {}", welcomeCalls);
     return welcomeCalls.stream()
         .sorted(Comparator.comparing(WelcomeCall::getPolicyIssuedAt))
         .toList();
-
   }
 
   /**
@@ -110,5 +120,20 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
    */
   private LocalDateTime getDelayedDate() {
     return LocalDateTime.now().minusDays(2);
+  }
+
+  /**
+   * Verifies if the welcome call is being processed by another agent at this time.
+   *
+   * @param welcomeCall the welcome call entry.
+   */
+  private void verifyWelcomeCallProcessingStatus(WelcomeCall welcomeCall, String newAgentId) {
+    // if agentId is set and is not the same as the one making the update request,
+    // then it means another agent is handling this welcome call.
+    if (!isNull(welcomeCall.getAgentId())
+        && !Objects.equals(welcomeCall.getAgentId(), newAgentId) ) {
+      log.error("Welcome call is being handled by another call center agent: {}", welcomeCall);
+      throw WelcomeCallProcessedException.ofBeingProcessedByAnotherAgent();
+    }
   }
 }
