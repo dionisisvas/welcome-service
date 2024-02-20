@@ -36,8 +36,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: status
-                  type: timestamp
-                  defaultValueComputed: current_timestamp
+                  type: varchar(15)
                   constraints:
                     nullable: false
               - column:

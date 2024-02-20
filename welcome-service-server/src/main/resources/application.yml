@@ -1,7 +1,7 @@
 # Spring Configuration
 spring:
   application:
-    name: welcome-call-service
+    name: welcome-service
   # Write dates as strings
   jackson:
     serialization:
@@ -14,6 +14,36 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
+  # Email configuration properties
+  mail:
+    username: welcome@insurance-company.com
+    password: password
+    host: smtp.insurance-company.com
+    port: 587
+    debug: true
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+        transport:
+          protocol: smtp
+# RabbitMQ properties
+  rabbitmq:
+    port: 5672
+    host: rabbitmq
+# LiquiBase configuration
+  liquibase:
+    change-log: classpath:db/changelog.xml
+
+mail-properties:
+  subject: "Welcome! Your insurance policy is now active!"
+
+# Scheduler configuration - runs every day at 22:30
+delayed-calls-scheduler:
+  enabled: true
+  cron: "0 30 22 * * *"
 
 # RabbitMQ properties
 rabbitmq:
@@ -23,7 +53,7 @@ rabbitmq:
 
 # Web Server configuration
 server:
-  port: 19000
+  port: 19001
   # Requests to endpoints need to start with /welcomeservice/api
   servlet:
     context-path: /welcomeservice/api
@@ -32,7 +62,7 @@ server:
 logging:
   file:
     path: './logs/${spring.application.name}'
-    name: ${logging.file.path}/welcome-call-service.log.%d{yyyy-MM-dd_HH}
+    name: ${logging.file.path}/welcome-service.log.%d{yyyy-MM-dd_HH}
   level:
     root: info
     # Enable logging for transaction commit and rollback
@@ -50,3 +80,30 @@ springdoc:
     enabled: true
   packagesToScan: org.insurance.welcomeservice.controller
   pathsToMatch: /v1/welcomecalls/**
+
+# Health & metrics related endpoints
+management:
+  server:
+    add-application-context-header: false
+    port: 27001
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+      show-components: always
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - env
+          - metrics
+          - prometheus

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Import;
 @ComponentScan(basePackages = {
     "org.insurance.welcomeservice.controller",
     "org.insurance.welcomeservice.service",
+    "org.insurance.welcomeservice.scheduler",
     "org.insurance.welcomeservice.mappers"
 })
 @Import({JpaConfiguration.class})

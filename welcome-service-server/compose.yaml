@@ -5,13 +5,19 @@ services:
       - 'RABBITMQ_DEFAULT_PASS=secret'
       - 'RABBITMQ_DEFAULT_USER=myuser'
     ports:
-      - '5672'
+      - 5672:5672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
-  postgres:
-    image: postgres:14-alpine
+  welcome-service-model:
+    image: welcome-service-model:latest
+    command: postgres
     ports:
       - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=welcome_service_password
-      - POSTGRES_USER=welcome_service_user
-      - POSTGRES_DB=welcome_service
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 90s

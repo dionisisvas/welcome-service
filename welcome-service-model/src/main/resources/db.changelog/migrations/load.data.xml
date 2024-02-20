@@ -3,7 +3,9 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
-    <include file="202402171100-initial-schema.yml" relativeToChangelogFile="true"/>
-    <include file="load.data.xml" relativeToChangelogFile="true"/>
+    <changeSet author="dionisisvas@gmail.com" id="welcome_calls-sample_data" runOnChange="true">
+        <loadUpdateData relativeToChangelogFile="true" tableName="welcome_calls" primaryKey="id"
+                file="csv/welcome_calls-sample_data.csv"/>
+    </changeSet>
 
 </databaseChangeLog>

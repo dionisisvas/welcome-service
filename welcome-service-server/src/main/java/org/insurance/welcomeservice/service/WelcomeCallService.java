@@ -13,7 +13,11 @@ public interface WelcomeCallService {
 
   List<WelcomeCall> getNotAnsweredWelcomeCalls();
 
+  List<WelcomeCall> getDelayedWelcomeCalls();
+
   WelcomeCall updateWelcomeCall(WelcomeCall welcomeCall);
 
   Optional<WelcomeCall> findWelcomeCallByPolicyReference(String policyReference);
+
+  void updateProcessedDelayedWelcomeCalls(List<WelcomeCall> welcomeCalls);
 }

@@ -1,0 +1,4 @@
+id,policy_reference,telephone,email,policy_issued_at,status,agent_id,created_at,updated_at
+1,a policy ref,2101234567,dionisisvas@gmail.com,2024-02-14T12:15:32.203,NO_ANSWER,agent_id,2024-02-14T12:15:32.203,2024-02-14T12:15:32.203
+2,test insurance policy,6912345678,client@test.com,2024-02-17T10:00:23.145,PENDING,null,2024-02-17T10:00:23.145,2024-02-17T10:00:23.145
+3,another policy,6998765432,client@example.com,2024-02-17T14:20:20.300,PENDING,null,2024-02-17T14:20:20.300,2024-02-17T14:20:20.300

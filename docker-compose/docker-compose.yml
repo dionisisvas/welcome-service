@@ -1,0 +1,43 @@
+version: '2.1'
+
+services:
+  rabbitmq:
+    image: 'rabbitmq:latest'
+    environment:
+      - 'RABBITMQ_DEFAULT_PASS=secret'
+      - 'RABBITMQ_DEFAULT_USER=myuser'
+    ports:
+      - 5672:5672
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  welcome-service-model:
+    image: welcome-service-model:latest
+    command: postgres
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 90s
+
+  welcome-service-server:
+    image: welcome-service-server:latest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      welcome-service-model:
+        condition: service_healthy
+    ports:
+      - 19001:19001
+      - 27001:27001
+      - 5314:5314
+    environment:
+      - spring.datasource.url=jdbc:postgresql://welcome-service-model:5432/welcome_calls
+      - spring.datasource.username=welcome_service_user
+      - spring.datasource.password=welcome_service_password

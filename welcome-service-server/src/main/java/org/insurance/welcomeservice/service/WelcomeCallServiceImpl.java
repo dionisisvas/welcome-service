@@ -81,6 +81,23 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
   }
 
   /**
+   * Returns all delayed welcome calls by chronological order, which have status NO_ANSWER and
+   * two days have passed since the policy was issued.
+   *
+   * @return a list with not answered WelcomeCall in chronological order.
+   */
+  @Override
+  @Transactional
+  public List<WelcomeCall> getDelayedWelcomeCalls() {
+    List<WelcomeCall> welcomeCalls =
+        welcomeCallRepository.findByStatusAndPolicyIssuedAtBefore(WelcomeCallStatus.NO_ANSWER, getDelayedDate());
+    log.info("Fetched all not answered welcome calls within the last two days: {}", welcomeCalls);
+    return welcomeCalls.stream()
+        .sorted(Comparator.comparing(WelcomeCall::getPolicyIssuedAt))
+        .toList();
+  }
+
+  /**
    * Finds a welcome call by policy reference.
    *
    * @param policyReference the policy reference.
@@ -90,6 +107,20 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
   @Transactional
   public Optional<WelcomeCall> findWelcomeCallByPolicyReference(String policyReference) {
     return welcomeCallRepository.findByPolicyReference(policyReference);
+  }
+
+  /**
+   * Sets the status of the welcome calls to EMAIL_SENT and updates them in the database.
+   *
+   * @param delayedWelcomeCalls the welcome calls to be updated.
+   */
+  @Override
+  @Transactional
+  public void updateProcessedDelayedWelcomeCalls(List<WelcomeCall> delayedWelcomeCalls) {
+    List<WelcomeCall> processedDelayedWelcomeCalls =
+        delayedWelcomeCalls.stream().map(this::getProcessedWelcomeCall).toList();
+    welcomeCallRepository.saveAll(processedDelayedWelcomeCalls);
+    log.info("Completed processing of delayed welcome calls: {}", processedDelayedWelcomeCalls);
   }
 
   /**
@@ -107,6 +138,7 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
         .telephone(existingWelcomeCall.getTelephone())
         .policyIssuedAt(existingWelcomeCall.getPolicyIssuedAt())
         .policyReference(existingWelcomeCall.getPolicyReference())
+        .createdAt(existingWelcomeCall.getCreatedAt())
         .status(newWelcomeCall.getStatus())
         .agentId(newWelcomeCall.getAgentId())
         .build();
@@ -135,5 +167,18 @@ public class WelcomeCallServiceImpl implements WelcomeCallService {
       log.error("Welcome call is being handled by another call center agent: {}", welcomeCall);
       throw WelcomeCallProcessedException.ofBeingProcessedByAnotherAgent();
     }
+  }
+
+  private WelcomeCall getProcessedWelcomeCall(WelcomeCall welcomeCall) {
+    return WelcomeCall.builder()
+        .id(welcomeCall.getId())
+        .agentId(welcomeCall.getAgentId())
+        .email(welcomeCall.getEmail())
+        .telephone(welcomeCall.getTelephone())
+        .policyIssuedAt(welcomeCall.getPolicyIssuedAt())
+        .policyReference(welcomeCall.getPolicyReference())
+        .createdAt(welcomeCall.getCreatedAt())
+        .status(WelcomeCallStatus.EMAIL_SENT)
+        .build();
   }
 }

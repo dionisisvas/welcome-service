@@ -1,7 +1,10 @@
 # Test Profile related configuration
+spring:
+  liquibase:
+    enabled: false
 logging:
   file:
     path: './logs/${spring.application.name}'
-    name: ${logging.file.path}/welcome-call-service.log.%d{yyyy-MM-dd_HH}
+    name: ${logging.file.path}/welcome-service.log.%d{yyyy-MM-dd_HH}
   level:
     root: debug
