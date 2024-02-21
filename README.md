@@ -32,7 +32,7 @@ cd ../welcome-service-server
 chmod +x build-image.sh   (if required)
 cd ../docker-compose
 ```
-Note: Unfortunately currently the service cannot connect to postgres DB from the docker stack (TODO fix).
+**Note**: Unfortunately currently the service cannot connect to postgres DB from the docker stack, any local running should be done with the mvn cmd method.
 
 The documentation for the welcome-service REST API can be found here:
 `http://localhost:19001/welcomeservice/api/swagger-ui/index.html`
@@ -41,6 +41,12 @@ The documentation for the welcome-service REST API can be found here:
 The database model contains one table, `welcome_calls`. We used JPA for modeling our Entity classes and as a persistence API.
 We also used liquibase for database migration and schema updating. Some sample data have been added through `welcome_calls-sample_data.csv.csv` file.
 
+For example, tou can get the sample PENDING data with the following request:
+```
+curl -X 'GET' \
+  'http://localhost:19001/welcomeservice/api/v1/welcomecalls/pending' \
+  -H 'accept: */*'
+```
 
 ### Assumptions
 When developing the application, certain assumptions where made, regarding the integration points with external systems:

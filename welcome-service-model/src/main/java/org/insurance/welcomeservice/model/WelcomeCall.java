@@ -2,6 +2,8 @@ package org.insurance.welcomeservice.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,6 +43,7 @@ public final class WelcomeCall {
   private LocalDateTime policyIssuedAt;
 
   @Column(name = "status")
+  @Enumerated(EnumType.STRING)
   private WelcomeCallStatus status;
 
   @Column(name = "agent_id")
